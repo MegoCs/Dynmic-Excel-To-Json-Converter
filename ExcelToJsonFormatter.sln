@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29020.237
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelToJsonFormatter", "ExcelToJsonFormatter\ExcelToJsonFormatter.csproj", "{2DAE2D66-6EF6-4628-9675-480C3F2DBEAA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2DAE2D66-6EF6-4628-9675-480C3F2DBEAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DAE2D66-6EF6-4628-9675-480C3F2DBEAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DAE2D66-6EF6-4628-9675-480C3F2DBEAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DAE2D66-6EF6-4628-9675-480C3F2DBEAA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {94C756FB-57D8-44F6-8E59-99FF3F708BB5}
+	EndGlobalSection
+EndGlobal
