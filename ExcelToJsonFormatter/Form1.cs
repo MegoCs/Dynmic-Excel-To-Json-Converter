@@ -14,11 +14,12 @@ namespace ExcelToJsonFormatter
     {
         private string inFilePath;
         private List<string> outPutFileNames;
-        private string outFilePath = @"C:\Json";
+        private readonly string outFilePath = @"C:\Json";
 
         public Form1()
         {
             InitializeComponent();
+            backgroundWorker1.WorkerReportsProgress = true;
         }
 
         private void TestConnectionBtn_Click(object sender, EventArgs e)
@@ -29,7 +30,7 @@ namespace ExcelToJsonFormatter
                 ftpUserNameTxt.Text = @"Test-AppService-notificationJob\$Test-AppService-notificationJob";
                 ftpPasswordTxt.Text = "PAhqNq7pmn9KmwkEPEClWGfDaC8EbQvxvDGyxv2Qf2mHrcSYTF0Zcch7aet5";
 
-                WebRequest request = WebRequest.Create(ftpUrlTxt.Text+"/JsonFiles");
+                WebRequest request = WebRequest.Create(ftpUrlTxt.Text + "/JsonFiles");
                 request.Method = WebRequestMethods.Ftp.MakeDirectory;
                 request.Credentials = new NetworkCredential(ftpUserNameTxt.Text, ftpPasswordTxt.Text);
                 using (FtpWebResponse resp = (FtpWebResponse)request.GetResponse())
@@ -66,9 +67,9 @@ namespace ExcelToJsonFormatter
             {
                 using (WebClient client = new WebClient())
                 {
-                    foreach (var item in outPutFileNames)
+                    foreach (string item in outPutFileNames)
                     {
-                        Upload(item,ftpUrlTxt.Text,ftpUserNameTxt.Text,ftpPasswordTxt.Text);
+                        Upload(item, ftpUrlTxt.Text, ftpUserNameTxt.Text, ftpPasswordTxt.Text);
                     }
                 }
             }
@@ -103,7 +104,10 @@ namespace ExcelToJsonFormatter
                 {
                     bytesRead = fileStream.Read(buffer, 0, buffer.Length);
                     if (bytesRead == 0)
+                    {
                         break;
+                    }
+
                     requestStream.Write(buffer, 0, bytesRead);
                 }
                 //The request stream must be closed before getting
@@ -127,88 +131,103 @@ namespace ExcelToJsonFormatter
             finally
             {
                 if (uploadResponse != null)
+                {
                     uploadResponse.Close();
+                }
+
                 if (fileStream != null)
+                {
                     fileStream.Close();
+                }
+
                 if (requestStream != null)
+                {
                     requestStream.Close();
+                }
             }
         }
 
         private void ConvertFileBtn_Click(object sender, EventArgs e)
         {
             uploadFileBtn.Enabled = true;
-
-        }
-
-        private void ConvertExcelWithPathToJsonFilesAtPutPath(string inFilePath, string outFilePath,BackgroundWorker worker)
-        {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            using (FileStream inFile = File.Open(inFilePath, FileMode.Open, FileAccess.Read))
-            {
-                using (IExcelDataReader reader = ExcelReaderFactory.CreateReader(inFile, new ExcelReaderConfiguration()
-                {
-                    FallbackEncoding = Encoding.GetEncoding(1252)
-                }))
-                {
-                    do
-                    {
-                        string fileName = $@"{outFilePath}\{reader.Name}.json";
-                        outPutFileNames.Add(fileName);
-                        progressBar1.Value = 0;
-                        using (StreamWriter outFile = File.CreateText(fileName))
-                        {
-                            using (JsonTextWriter writer = new JsonTextWriter(outFile))
-                            {
-                                writer.Formatting = Formatting.Indented; //I likes it tidy
-                                writer.WriteStartArray();
-                                reader.Read();
-                                IDictionary<int, string> dict = new Dictionary<int, string>();
-                                int culmnsNumber = 0;
-                                try
-                                {
-                                    for (culmnsNumber = 0; culmnsNumber < reader.FieldCount; culmnsNumber++)
-                                    {
-                                        dict.Add(culmnsNumber, reader[culmnsNumber].ToString());
-                                    }
-                                }
-                                catch
-                                {
-                                }
-                                int rows = reader.RowCount;
-                                while (reader.Read())
-                                {
-                                    writer.WriteStartObject();
-                                    for (int i = 0; i < culmnsNumber; i++)
-                                    {
-                                        writer.WritePropertyName(dict[i]);
-                                        writer.WriteValue(reader[i]);
-                                    }
-                                    writer.WriteEndObject();
-                                    worker.ReportProgress((reader.Depth / reader.RowCount) * 100, reader.Name);
-                                }
-                                writer.WriteEndArray();
-                            }
-                        }
-                    } while (reader.NextResult());
-                }
-            }
+            backgroundWorker1.RunWorkerAsync();
         }
 
         private void BackgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-            ConvertExcelWithPathToJsonFilesAtPutPath(inFilePath, outFilePath, sender as BackgroundWorker);
+            BackgroundWorker worker = sender as BackgroundWorker;
+
+            try
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                using (FileStream inFile = File.Open(inFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    using (IExcelDataReader reader = ExcelReaderFactory.CreateReader(inFile, new ExcelReaderConfiguration()
+                    {
+                        FallbackEncoding = Encoding.GetEncoding(1252)
+                    }))
+                    {
+                        do
+                        {
+                            string fileName = $@"{outFilePath}\{reader.Name}.json";
+                            outPutFileNames.Add(fileName);
+                            worker.ReportProgress(0, reader.Name);
+                            using (StreamWriter outFile = File.CreateText(fileName))
+                            {
+                                using (JsonTextWriter writer = new JsonTextWriter(outFile))
+                                {
+                                    writer.Formatting = Formatting.Indented; //I likes it tidy
+                                    writer.WriteStartArray();
+                                    reader.Read();
+                                    IDictionary<int, string> dict = new Dictionary<int, string>();
+                                    int culmnsNumber = 0;
+                                    try
+                                    {
+                                        for (culmnsNumber = 0; culmnsNumber < reader.FieldCount; culmnsNumber++)
+                                        {
+                                            dict.Add(culmnsNumber, reader[culmnsNumber].ToString());
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
+                                    int rows = reader.RowCount;
+                                    while (reader.Read())
+                                    {
+                                        writer.WriteStartObject();
+                                        for (int i = 0; i < culmnsNumber; i++)
+                                        {
+                                            writer.WritePropertyName(dict[i]);
+                                            writer.WriteValue(reader[i]);
+                                        }
+                                        writer.WriteEndObject();
+                                        int progress = (int)((reader.Depth / (double)reader.RowCount) * 100);
+                                        worker.ReportProgress(progress, reader.Name);
+                                    }
+                                    writer.WriteEndArray();
+                                }
+                            }
+                        } while (reader.NextResult());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error : {ex.Message}");
+            }
         }
 
         private void BackgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            progressBar1.Value = e.ProgressPercentage;
+            progressBar1.Value = e.ProgressPercentage + 1;
             sheetNameLabel.Text = e.UserState.ToString();
+            sheetNameLabel.Visible = true;
         }
 
         private void BackgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             MessageBox.Show("Task Completed");
+            sheetNameLabel.Text = "Done";
         }
     }
 }
