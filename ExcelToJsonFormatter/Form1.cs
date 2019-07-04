@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace ExcelToJsonFormatter
@@ -14,8 +15,9 @@ namespace ExcelToJsonFormatter
     {
         private string inFilePath;
         private List<string> outPutFileNames;
-        private readonly string outFilePath = @"C:\Json";
-        private readonly string connectionFile= @"C:\FtpConnection.txt";
+        private bool convertionFaild;
+        private readonly string outFolderPath = @"Json";
+        private readonly string connectionFile = @"FtpConnection.txt";
 
         public Form1()
         {
@@ -66,15 +68,23 @@ namespace ExcelToJsonFormatter
 
         private void UploadFileBtn_Click(object sender, EventArgs e)
         {
+            MessageBox.Show("Please Don't Close The Form till Upload Complete");
+            sheetNameLabel.Text = $"Uploading:...";
+            progressBar1.Value = 0;
             try
             {
                 using (WebClient client = new WebClient())
                 {
-                    foreach (string item in outPutFileNames)
+                    for (int i = 0; i < outPutFileNames.Count; i++)
                     {
-                        Upload(item, ftpUrlTxt.Text, ftpUserNameTxt.Text, ftpPasswordTxt.Text);
+                        sheetNameLabel.Text = $"Uploading: {Path.GetFileName(outPutFileNames[i])}";
+                        int progress = (int)(((i + 1) / (double)outPutFileNames.Count) * 100);
+                        progressBar1.Value = progress;
+                        Thread.Sleep(2000);
+                        Upload(outPutFileNames[i], ftpUrlTxt.Text, ftpUserNameTxt.Text, ftpPasswordTxt.Text);
                     }
                     MessageBox.Show("Upload Completed");
+                    sheetNameLabel.Text = $"Done...";
                 }
             }
             catch (Exception ex)
@@ -102,7 +112,7 @@ namespace ExcelToJsonFormatter
                 //uploadRequest.UsePassive = false; <--found from another forum and did not make a difference
                 requestStream = uploadRequest.GetRequestStream();
                 fileStream = File.Open(fileName, FileMode.Open);
-                
+
                 byte[] buffer = new byte[1024];
                 int bytesRead;
                 while (true)
@@ -123,15 +133,15 @@ namespace ExcelToJsonFormatter
             }
             catch (UriFormatException ex)
             {
-                MessageBox.Show("Error: " + ex.Message);
+                MessageBox.Show("Error While Uploading : " + ex.Message);
             }
             catch (IOException ex)
             {
-                MessageBox.Show("Error: " + ex.Message);
+                MessageBox.Show("Error While Uploading : " + ex.Message);
             }
             catch (WebException ex)
             {
-                MessageBox.Show("Error: " + ex.Message);
+                MessageBox.Show("Error While Uploading :" + ex.Message);
             }
             finally
             {
@@ -174,7 +184,12 @@ namespace ExcelToJsonFormatter
                     {
                         do
                         {
-                            string fileName = $@"{outFilePath}\{reader.Name}.json";
+                            if (!Directory.Exists(outFolderPath))
+                            {
+                                Directory.CreateDirectory(outFolderPath);
+                            }
+
+                            string fileName = $@"{outFolderPath}\{reader.Name}.json";
                             outPutFileNames.Add(fileName);
                             worker.ReportProgress(0, reader.Name);
                             using (StreamWriter outFile = File.CreateText(fileName))
@@ -215,10 +230,12 @@ namespace ExcelToJsonFormatter
                         } while (reader.NextResult());
                     }
                 }
+                convertionFaild = false;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error : {ex.Message}");
+                convertionFaild = true;
             }
         }
 
@@ -231,16 +248,19 @@ namespace ExcelToJsonFormatter
 
         private void BackgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            MessageBox.Show("Task Completed");
-            sheetNameLabel.Text = "Done";
+            if (!convertionFaild)
+            {
+                MessageBox.Show("Convertion Completed");
+                sheetNameLabel.Text = "Done";
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             try
             {
-                var conn = Helper.ReadFromBinaryFile<ConnectionSettings>(connectionFile);
-                if (conn!=null)
+                ConnectionSettings conn = Helper.ReadFromBinaryFile<ConnectionSettings>(connectionFile);
+                if (conn != null)
                 {
                     ftpUrlTxt.Text = conn.FtpUrl;
                     ftpPasswordTxt.Text = conn.FtpPassword;
@@ -257,6 +277,7 @@ namespace ExcelToJsonFormatter
         private void SaveConnection(bool save)
         {
             if (save)
+            {
                 Helper.WriteToBinaryFile<ConnectionSettings>(connectionFile, new ConnectionSettings()
                 {
                     FtpPassword = ftpPasswordTxt.Text,
@@ -264,8 +285,11 @@ namespace ExcelToJsonFormatter
                     FtpUserName = ftpUserNameTxt.Text,
                     SaveConnection = saveConnectionCheck.Checked
                 });
+            }
             else
+            {
                 Helper.WriteToBinaryFile<ConnectionSettings>(connectionFile, new ConnectionSettings());
+            }
         }
 
         private void SaveConnectionCheck_CheckedChanged(object sender, EventArgs e)

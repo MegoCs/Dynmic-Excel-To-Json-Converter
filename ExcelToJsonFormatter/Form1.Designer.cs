@@ -175,7 +175,7 @@
             // sheetNameLabel
             // 
             this.sheetNameLabel.AutoSize = true;
-            this.sheetNameLabel.Location = new System.Drawing.Point(125, 138);
+            this.sheetNameLabel.Location = new System.Drawing.Point(409, 64);
             this.sheetNameLabel.Name = "sheetNameLabel";
             this.sheetNameLabel.Size = new System.Drawing.Size(63, 13);
             this.sheetNameLabel.TabIndex = 7;
