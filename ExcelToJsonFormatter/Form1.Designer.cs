@@ -44,6 +44,7 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.sheetNameLabel = new System.Windows.Forms.Label();
+            this.saveConnectionCheck = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // ftpUrlTxt
@@ -82,7 +83,7 @@
             // 
             this.testConnectionBtn.Location = new System.Drawing.Point(409, 12);
             this.testConnectionBtn.Name = "testConnectionBtn";
-            this.testConnectionBtn.Size = new System.Drawing.Size(109, 23);
+            this.testConnectionBtn.Size = new System.Drawing.Size(108, 23);
             this.testConnectionBtn.TabIndex = 3;
             this.testConnectionBtn.Text = "Test Connection";
             this.testConnectionBtn.UseVisualStyleBackColor = true;
@@ -97,7 +98,7 @@
             // 
             // browseFileBtn
             // 
-            this.browseFileBtn.Location = new System.Drawing.Point(410, 99);
+            this.browseFileBtn.Location = new System.Drawing.Point(409, 99);
             this.browseFileBtn.Name = "browseFileBtn";
             this.browseFileBtn.Size = new System.Drawing.Size(108, 23);
             this.browseFileBtn.TabIndex = 4;
@@ -181,11 +182,25 @@
             this.sheetNameLabel.Text = "SheetName";
             this.sheetNameLabel.Visible = false;
             // 
+            // saveConnectionCheck
+            // 
+            this.saveConnectionCheck.AutoSize = true;
+            this.saveConnectionCheck.Checked = true;
+            this.saveConnectionCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.saveConnectionCheck.Location = new System.Drawing.Point(409, 38);
+            this.saveConnectionCheck.Name = "saveConnectionCheck";
+            this.saveConnectionCheck.Size = new System.Drawing.Size(108, 17);
+            this.saveConnectionCheck.TabIndex = 10;
+            this.saveConnectionCheck.Text = "Save Connection";
+            this.saveConnectionCheck.UseVisualStyleBackColor = true;
+            this.saveConnectionCheck.CheckedChanged += new System.EventHandler(this.SaveConnectionCheck_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(538, 172);
+            this.ClientSize = new System.Drawing.Size(530, 172);
+            this.Controls.Add(this.saveConnectionCheck);
             this.Controls.Add(this.sheetNameLabel);
             this.Controls.Add(this.convertFileBtn);
             this.Controls.Add(this.uploadFileBtn);
@@ -206,6 +221,7 @@
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Convertion Form";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -229,6 +245,7 @@
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.Label sheetNameLabel;
+        private System.Windows.Forms.CheckBox saveConnectionCheck;
     }
 }
 

@@ -15,6 +15,7 @@ namespace ExcelToJsonFormatter
         private string inFilePath;
         private List<string> outPutFileNames;
         private readonly string outFilePath = @"C:\Json";
+        private readonly string connectionFile= @"C:\FtpConnection.txt";
 
         public Form1()
         {
@@ -26,12 +27,13 @@ namespace ExcelToJsonFormatter
         {
             try
             {
-                ftpUrlTxt.Text = "ftp://waws-prod-cy4-001.ftp.azurewebsites.windows.net";
-                ftpUserNameTxt.Text = @"Test-AppService-notificationJob\$Test-AppService-notificationJob";
-                ftpPasswordTxt.Text = "PAhqNq7pmn9KmwkEPEClWGfDaC8EbQvxvDGyxv2Qf2mHrcSYTF0Zcch7aet5";
+                ftpUrlTxt.Text = "ftp://ftp.transliminal.org/";
+                ftpUserNameTxt.Text = @"ExcelConverter@transliminal.org";
+                ftpPasswordTxt.Text = "'ls{*c&D80?@";
 
+                ftpUrlTxt.Text = (ftpUrlTxt.Text.ToLower().Contains("ftp://")) ? ftpUrlTxt.Text : ftpUrlTxt.Text.Insert(0, "ftp://");
                 WebRequest request = WebRequest.Create(ftpUrlTxt.Text + "/JsonFiles");
-                request.Method = WebRequestMethods.Ftp.MakeDirectory;
+                request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
                 request.Credentials = new NetworkCredential(ftpUserNameTxt.Text, ftpPasswordTxt.Text);
                 using (FtpWebResponse resp = (FtpWebResponse)request.GetResponse())
                 {
@@ -39,6 +41,7 @@ namespace ExcelToJsonFormatter
                     browseFileBtn.Enabled = true;
                     convertFileBtn.Enabled = true;
                     uploadFileBtn.Enabled = true;
+                    SaveConnection(saveConnectionCheck.Checked);
                 }
             }
             catch (Exception)
@@ -71,6 +74,7 @@ namespace ExcelToJsonFormatter
                     {
                         Upload(item, ftpUrlTxt.Text, ftpUserNameTxt.Text, ftpPasswordTxt.Text);
                     }
+                    MessageBox.Show("Upload Completed");
                 }
             }
             catch (Exception ex)
@@ -98,6 +102,7 @@ namespace ExcelToJsonFormatter
                 //uploadRequest.UsePassive = false; <--found from another forum and did not make a difference
                 requestStream = uploadRequest.GetRequestStream();
                 fileStream = File.Open(fileName, FileMode.Open);
+                
                 byte[] buffer = new byte[1024];
                 int bytesRead;
                 while (true)
@@ -228,6 +233,44 @@ namespace ExcelToJsonFormatter
         {
             MessageBox.Show("Task Completed");
             sheetNameLabel.Text = "Done";
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            try
+            {
+                var conn = Helper.ReadFromBinaryFile<ConnectionSettings>(connectionFile);
+                if (conn!=null)
+                {
+                    ftpUrlTxt.Text = conn.FtpUrl;
+                    ftpPasswordTxt.Text = conn.FtpPassword;
+                    ftpUserNameTxt.Text = conn.FtpUserName;
+                    saveConnectionCheck.Checked = conn.SaveConnection;
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        private void SaveConnection(bool save)
+        {
+            if (save)
+                Helper.WriteToBinaryFile<ConnectionSettings>(connectionFile, new ConnectionSettings()
+                {
+                    FtpPassword = ftpPasswordTxt.Text,
+                    FtpUrl = ftpUrlTxt.Text,
+                    FtpUserName = ftpUserNameTxt.Text,
+                    SaveConnection = saveConnectionCheck.Checked
+                });
+            else
+                Helper.WriteToBinaryFile<ConnectionSettings>(connectionFile, new ConnectionSettings());
+        }
+
+        private void SaveConnectionCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveConnection(saveConnectionCheck.Checked);
         }
     }
 }
