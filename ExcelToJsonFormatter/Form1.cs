@@ -29,10 +29,6 @@ namespace ExcelToJsonFormatter
         {
             try
             {
-                ftpUrlTxt.Text = "ftp://ftp.transliminal.org/";
-                ftpUserNameTxt.Text = @"ExcelConverter@transliminal.org";
-                ftpPasswordTxt.Text = "'ls{*c&D80?@";
-
                 ftpUrlTxt.Text = (ftpUrlTxt.Text.ToLower().Contains("ftp://")) ? ftpUrlTxt.Text : ftpUrlTxt.Text.Insert(0, "ftp://");
                 WebRequest request = WebRequest.Create(ftpUrlTxt.Text + "/JsonFiles");
                 request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
